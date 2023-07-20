@@ -395,6 +395,58 @@ def adaptive_filter(
     return filtered_signal
 
 
+def order_statistic_filter(
+    sig: np.ndarray,
+    order: int = 8,
+    ftype: str = 'median',
+    alpha: float = 0.1,
+) -> np.ndarray:
+    '''
+    Order statistic filter
+
+    Input:
+        sig: Input signal,
+        order: Order of the filter (window length)
+        ftype: Type of the filter ('median', 'min', 'max', 'min-max',
+            'alpha-trimmed-mean')
+        alpha: Value to remove outliers (0 <= alpha < 0.5)
+    Return:
+        filtered_signal: Filtered signal,
+    '''
+    sig = np.ravel(sig)
+    if ftype == 'median':
+        filtered_signal = np.array(
+            [np.median(sig[k-order:k]) for k in range(order, sig.size)])
+    elif ftype == 'min':
+        filtered_signal = np.array(
+            [np.min(sig[k-order:k]) for k in range(order, sig.size)])
+    elif ftype == 'max':
+        filtered_signal = np.array(
+            [np.max(sig[k-order:k]) for k in range(order, sig.size)])
+    elif ftype == 'min-max':
+        m_sig = np.array(
+            [np.max(sig[k-order:k]) for k in range(order, sig.size)])
+        filtered_signal = np.array(
+            [np.max(m_sig[k-order:k]) for k in range(order, m_sig.size)])
+    elif ftype == 'alpha-trimmed-mean':
+        if alpha >= 0 and alpha < 0.5:
+            filtered_signal = np.array([])
+            for k in range(order, sig.size):
+                low_bound = np.percentile(
+                    sig[k-order:k], alpha*100.0)
+                high_bound = np.percentile(
+                    sig[k-order:k], (1-alpha)*100.0)
+                win_trimmed = np.array([x for x in sig[
+                        k-order:k] if low_bound <= x < high_bound])
+                filtered_signal = np.append(
+                    filtered_signal, np.mean(win_trimmed))
+        else:
+            sys.exit('Alpha must be 0 <= alpha < 0.5')
+    else:
+        sys.exit('Filter type has not been defined!')
+    return filtered_signal
+
+
 if __name__ == "__main__":
     # Import ECG data
     # Parse directory path and input file name from the
