@@ -4,7 +4,13 @@ PyBiosignal
 .. contents:: **Table of Contents**
     :backlinks: none
 
-#Installation
+About
+-------
+This projects include tools required to analyze biomedical signals, including electrocardiogram (ECG), photoplethysmogram (PPG), electromyogram (EMG), and electroencephalogram (EEG).
+Added methods (so far): A variety of time-domain and frequency-domain filtering techniques
+
+
+Installation
 ------------
 
 PyBiosignal is distributed on `PyPI <https://pypi.org>`_ as a universal
