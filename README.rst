@@ -14,7 +14,7 @@ Python 2.7/3.5+ and PyPy.
 .. code-block:: bash
 
     $ pip install PyBiosignal
--->
+--->
 License
 -------
 
