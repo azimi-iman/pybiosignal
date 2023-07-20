@@ -2,10 +2,10 @@
 name = 'PyBiosignal'
 version = '0.0.1'
 description = ''
-author = 'Iman'
-author_email = 'me@un.known'
+author = 'Iman Azimi'
+author_email = 'azimi.iman.1988@gmail.com'
 license = 'MIT/Apache-2.0'
-url = 'https://github.com/_/PyBiosignal'
+url = 'https://github.com/azimi-iman/pybiosignal'
 
 [requires]
 python_version = ['2.7', '3.5', '3.6', 'pypy', 'pypy3']
@@ -15,3 +15,10 @@ requires = ['setuptools', 'wheel']
 
 [tool.hatch.commands]
 prerelease = 'hatch build'
+
+dependencies = [
+  "python-dateutil==2.8.*",
+  "numpy~=1.19.5",
+  "scipy~=1.5.4",
+  "matplotlib~=3.3.4",
+]
