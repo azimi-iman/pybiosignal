@@ -4,7 +4,7 @@ PyBiosignal
 .. contents:: **Table of Contents**
     :backlinks: none
 
-[comment]: <> (Installation
+<!--- #Installation
 ------------
 
 PyBiosignal is distributed on `PyPI <https://pypi.org>`_ as a universal
@@ -14,7 +14,7 @@ Python 2.7/3.5+ and PyPy.
 .. code-block:: bash
 
     $ pip install PyBiosignal
-)
+-->
 License
 -------
 
