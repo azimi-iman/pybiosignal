@@ -10,8 +10,10 @@ import analysis_toolbox
 import data_toolbox
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib import patches
+from matplotlib.pyplot import axhline, axvline
 from scipy.signal import (bessel, butter, cheby1, cheby2, ellip, filtfilt,
-                          firwin, freqz, iirnotch)
+                          firwin, freqz, iirnotch, tf2zpk)
 
 
 def plot_frequency_response(
@@ -39,6 +41,35 @@ def plot_frequency_response(
     plt.show()
 
 
+def zero_pole_plot(b: np.ndarray, a: np.ndarray):
+    '''
+    Plot Zero-Pole plot of the filter
+
+    Input:
+        b: Numerator (Zeros) of the filter
+        a: Denominator (Poles) of the filter
+    '''
+    (z, p, k) = tf2zpk(b, a)
+    unit_circle = patches.Circle((0, 0), radius=1, fill=False,
+                                 color='black', ls='solid', alpha=0.5)
+    plt.gca().add_patch(unit_circle)
+    axvline(0, color='black', alpha=0.5)
+    axhline(0, color='black', alpha=0.5)
+    # Plot the poles
+    plt.plot(p.real, p.imag, 'x', markersize=8, color='red')
+    # Plot the zeros
+    plt.plot(z.real, z.imag, 'o', markersize=8,
+             color='none', markeredgecolor='blue')
+    plt.grid()
+    plt.xlabel('Re(Z)')
+    plt.ylabel('Im(Z)')
+    plt.title('Zero-Pole Plot')
+    r = 1.2 * np.amax(np.concatenate((abs(z), abs(p), [1])))
+    plt.axis('scaled')
+    plt.axis([-r, r, -r, r])
+    plt.show()
+
+
 def frequency_filter_design(
         filt_design: str,
         wn: Union[float, list],
@@ -48,6 +79,7 @@ def frequency_filter_design(
         rs: float = 40.0,
         order: int = 3,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Frequency filter design
@@ -62,6 +94,7 @@ def frequency_filter_design(
         rs: Minimum attenuation required in the stop band,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         b: Numerator (Zeros)
         a: Denominator (Poles)
@@ -94,6 +127,9 @@ def frequency_filter_design(
     if freq_response:
         # Plot frequency response
         plot_frequency_response(b, a, fs)
+    if zero_pole:
+        # Plot Zero-Pole plot
+        zero_pole_plot(b, a)
     return (b, a)
 
 
@@ -106,6 +142,7 @@ def highpass_filter(
         samp_freq: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> np.ndarray:
     '''
     Highpass filter
@@ -120,6 +157,7 @@ def highpass_filter(
         samp_freq: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -132,7 +170,7 @@ def highpass_filter(
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
         fs=samp_freq, rp=rp, rs=rs, order=order,
-        freq_response=freq_response)
+        freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -147,6 +185,7 @@ def lowpass_filter(
         samp_freq: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> np.ndarray:
     '''
     Lowpass filter
@@ -161,6 +200,7 @@ def lowpass_filter(
         samp_freq: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -173,7 +213,7 @@ def lowpass_filter(
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
         fs=samp_freq, rp=rp, rs=rs, order=order,
-        freq_response=freq_response)
+        freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -189,6 +229,7 @@ def bandpass_filter(
         samp_freq: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> np.ndarray:
     '''
     Bandpass filter
@@ -204,6 +245,7 @@ def bandpass_filter(
         samp_freq: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -216,7 +258,7 @@ def bandpass_filter(
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
         fs=samp_freq, rp=rp, rs=rs, order=order,
-        freq_response=freq_response)
+        freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -232,6 +274,7 @@ def bandstop_filter(
         samp_freq: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> np.ndarray:
     '''
     Bandstop filter
@@ -247,6 +290,7 @@ def bandstop_filter(
         samp_freq: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -259,7 +303,7 @@ def bandstop_filter(
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
         fs=samp_freq, rp=rp, rs=rs, order=order,
-        freq_response=freq_response)
+        freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -271,6 +315,7 @@ def notch_filter(
         cutoff: float = 60.0,
         quality_factor: float = 30.0,
         freq_response: bool = False,
+        zero_pole: bool = False,
 ) -> np.ndarray:
     '''
     Notch filter
@@ -281,6 +326,7 @@ def notch_filter(
         quality_factor: Quality factor. Dimensionless
             parameter that characterizes notch filter
         freq_response: If True, plot the frequency response,
+        zero_pole: If True, plot the zero-pole plot,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -289,6 +335,9 @@ def notch_filter(
     if freq_response:
         # Plot frequency response
         plot_frequency_response(b, a, samp_freq)
+    if zero_pole:
+        # Plot Zero-Pole plot
+        zero_pole_plot(b, a)
     return filtered_signal
 
 
@@ -510,3 +559,12 @@ if __name__ == "__main__":
     )
     stk_sigs = data_toolbox.segemntation_fix(
         sig=sigs[:, 0], samp_freq=fs, win_length=10.0)
+
+    bandpass_filter(
+        sig=sigs[:, 0], low_cutoff=10.0, high_cutoff=50.0,
+        filt_design='butter', samp_freq=fs, order=5,
+        freq_response=True, zero_pole=True)
+
+    notch_filter(
+        sig=sigs[:, 0], cutoff=10.0, samp_freq=fs,
+        freq_response=True, zero_pole=True)
