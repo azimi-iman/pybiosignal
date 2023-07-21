@@ -6,22 +6,48 @@ Filtering techniques
 import sys
 from typing import Tuple, Union
 
-# import matplotlib.pyplot as plt
-import numpy as np
-from scipy.signal import (bessel, butter, cheby1, cheby2, ellip, filtfilt,
-                          iirnotch)
-
 import analysis_toolbox
 import data_toolbox
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.signal import (bessel, butter, cheby1, cheby2, ellip, filtfilt,
+                          firwin, freqz, iirnotch)
+
+
+def plot_frequency_response(
+        b: np.ndarray, a: np.ndarray, fs: float = None):
+    '''
+    Plot frequency response of the filter
+
+    Input:
+        b: Numerator (Zeros) of the filter
+        a: Denominator (Poles) of the filter
+        fs: Sampling frequency,
+    '''
+    w, h = freqz(b, a, fs=fs)
+    fig, (ax1, ax2) = plt.subplots(nrows=2, sharex=True)
+    ax1 = plt.subplot(211)
+    ax1.set_title('Frequency Response')
+    ax1.set_ylabel('Amplitude')
+    ax1.grid()
+    ax1.plot(w, abs(h))
+    ax2 = plt.subplot(212)
+    ax2.set_ylabel('Angle (radians)')
+    ax2.set_xlabel('Frequency [Hz]')
+    ax2.grid()
+    ax2.plot(w, np.angle(h))
+    plt.show()
 
 
 def frequency_filter_design(
         filt_design: str,
         wn: Union[float, list],
         btype: str,
+        fs: float = 100.0,
         rp: float = 5.0,
         rs: float = 40.0,
-        order: int = 3
+        order: int = 3,
+        freq_response: bool = False,
 ) -> Tuple[np.ndarray, np.ndarray]:
     '''
     Frequency filter design
@@ -31,12 +57,14 @@ def frequency_filter_design(
             'cheby1', 'cheby2', 'ellip', 'bessel')
         wn: A scalar or length-2 sequence giving the critical frequencies,
         btype: filter type ('lowpass', 'highpass', 'bandpass', 'bandstop')
+        fs: Sampling frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
         order: Order of the filter,
+        freq_response: If True, plot the frequency response,
     Return:
-        b: Denominator (Poles)
-        a: Numerator (Zeros)
+        b: Numerator (Zeros)
+        a: Denominator (Poles)
     '''
     if filt_design == "butter":
         b, a = butter(
@@ -58,8 +86,14 @@ def frequency_filter_design(
         b, a = bessel(
             N=order, Wn=wn,
             btype=btype, analog=False)
+    elif filt_design == "FIR":
+        b = firwin(numtaps=order+1, cutoff=wn, pass_zero=btype)
+        a = 1
     else:
         sys.exit('Filter type has not been defined!')
+    if freq_response:
+        # Plot frequency response
+        plot_frequency_response(b, a, fs)
     return (b, a)
 
 
@@ -71,6 +105,7 @@ def highpass_filter(
         rs: float = 40.0,
         samp_freq: float = 100.0,
         order: int = 3,
+        freq_response: bool = False,
 ) -> np.ndarray:
     '''
     Highpass filter
@@ -78,12 +113,13 @@ def highpass_filter(
     Input:
         sig: Input signal,
         filt_design: filter design ('butter',
-            'cheby1', 'cheby2', 'ellip', 'bessel')
+            'cheby1', 'cheby2', 'ellip', 'bessel', 'FIR')
         cutoff: cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
         samp_freq: Sampling frequency,
         order: Order of the filter,
+        freq_response: If True, plot the frequency response,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -95,7 +131,8 @@ def highpass_filter(
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        rp=rp, rs=rs, order=order)
+        fs=samp_freq, rp=rp, rs=rs, order=order,
+        freq_response=freq_response)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -109,6 +146,7 @@ def lowpass_filter(
         rs: float = 40.0,
         samp_freq: float = 100.0,
         order: int = 3,
+        freq_response: bool = False,
 ) -> np.ndarray:
     '''
     Lowpass filter
@@ -116,12 +154,13 @@ def lowpass_filter(
     Input:
         sig: Input signal,
         filt_design: filter design ('butter',
-            'cheby1', 'cheby2', 'ellip', 'bessel')
+            'cheby1', 'cheby2', 'ellip', 'bessel', 'FIR')
         cutoff: cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
         samp_freq: Sampling frequency,
         order: Order of the filter,
+        freq_response: If True, plot the frequency response,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -133,7 +172,8 @@ def lowpass_filter(
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        rp=rp, rs=rs, order=order)
+        fs=samp_freq, rp=rp, rs=rs, order=order,
+        freq_response=freq_response)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -148,6 +188,7 @@ def bandpass_filter(
         rs: float = 40.0,
         samp_freq: float = 100.0,
         order: int = 3,
+        freq_response: bool = False,
 ) -> np.ndarray:
     '''
     Bandpass filter
@@ -155,13 +196,14 @@ def bandpass_filter(
     Input:
         sig: Input signal,
         filt_design: filter design ('butter',
-            'cheby1', 'cheby2', 'ellip', 'bessel')
+            'cheby1', 'cheby2', 'ellip', 'bessel', 'FIR')
         low_cutoff: Low cut-off frequency,
         high_cutoff: High cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
         samp_freq: Sampling frequency,
         order: Order of the filter,
+        freq_response: If True, plot the frequency response,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -173,7 +215,8 @@ def bandpass_filter(
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        rp=rp, rs=rs, order=order)
+        fs=samp_freq, rp=rp, rs=rs, order=order,
+        freq_response=freq_response)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -188,6 +231,7 @@ def bandstop_filter(
         rs: float = 40.0,
         samp_freq: float = 100.0,
         order: int = 3,
+        freq_response: bool = False,
 ) -> np.ndarray:
     '''
     Bandstop filter
@@ -195,13 +239,14 @@ def bandstop_filter(
     Input:
         sig: Input signal,
         filt_design: filter design ('butter',
-            'cheby1', 'cheby2', 'ellip', 'bessel')
+            'cheby1', 'cheby2', 'ellip', 'bessel', 'FIR')
         low_cutoff: Low cut-off frequency,
         high_cutoff: High cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
         samp_freq: Sampling frequency,
         order: Order of the filter,
+        freq_response: If True, plot the frequency response,
     Return:
         filtered_signal: Filtered signal,
     '''
@@ -213,7 +258,8 @@ def bandstop_filter(
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        rp=rp, rs=rs, order=order)
+        fs=samp_freq, rp=rp, rs=rs, order=order,
+        freq_response=freq_response)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     return filtered_signal
@@ -224,6 +270,7 @@ def notch_filter(
         samp_freq: float,
         cutoff: float = 60.0,
         quality_factor: float = 30.0,
+        freq_response: bool = False,
 ) -> np.ndarray:
     '''
     Notch filter
@@ -233,11 +280,15 @@ def notch_filter(
         cutoff: Frequency to be removed,
         quality_factor: Quality factor. Dimensionless
             parameter that characterizes notch filter
+        freq_response: If True, plot the frequency response,
     Return:
         filtered_signal: Filtered signal,
     '''
     b, a = iirnotch(cutoff, quality_factor, samp_freq)
     filtered_signal = filtfilt(b, a, np.ravel(sig))
+    if freq_response:
+        # Plot frequency response
+        plot_frequency_response(b, a, samp_freq)
     return filtered_signal
 
 
