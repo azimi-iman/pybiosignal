@@ -49,24 +49,24 @@ def read_ecg_mitdb(path: str, file_name: str) -> Tuple[np.ndarray, float]:
 
 def segemntation_fix(
         sig: np.ndarray,
-        samp_freq: float,
+        fs: float,
         win_length: float = 10) -> np.ndarray:
     '''
     Segment signals using a fixed window
 
     Input:
         sig: Input signal,
-        samp_freq: Sampling frequency,
+        fs: Sampling frequency,
         win_length: Length of the window in seconds,
     Return:
         stacked_sigs: segmented signals stacked
     '''
     sig = np.ravel(sig)
-    if sig.size < win_length*samp_freq:
+    if sig.size < win_length*fs:
         sys.exit('Signal length is less than window length')
-    win_number = int(sig.size/(win_length*samp_freq))
+    win_number = int(sig.size/(win_length*fs))
     stacked_sigs = np.stack(np.split(
-        sig[:int(win_number*win_length*samp_freq)], win_number))
+        sig[:int(win_number*win_length*fs)], win_number))
     return stacked_sigs
 
 

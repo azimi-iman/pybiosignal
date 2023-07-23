@@ -139,7 +139,7 @@ def highpass_filter(
         cutoff: float = 5.0,
         rp: float = 5.0,
         rs: float = 40.0,
-        samp_freq: float = 100.0,
+        fs: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
         zero_pole: bool = False,
@@ -154,7 +154,7 @@ def highpass_filter(
         cutoff: cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
-        samp_freq: Sampling frequency,
+        fs: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
         zero_pole: If True, plot the zero-pole plot,
@@ -163,13 +163,13 @@ def highpass_filter(
     '''
     btype = "highpass"
     # Compute the Nyquist frequency
-    nyquist = 0.5 * samp_freq
+    nyquist = 0.5 * fs
     # Compute the normalized cutoff frequencies
     wn = cutoff / nyquist
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        fs=samp_freq, rp=rp, rs=rs, order=order,
+        fs=fs, rp=rp, rs=rs, order=order,
         freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
@@ -182,7 +182,7 @@ def lowpass_filter(
         cutoff: float = 40.0,
         rp: float = 5.0,
         rs: float = 40.0,
-        samp_freq: float = 100.0,
+        fs: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
         zero_pole: bool = False,
@@ -197,7 +197,7 @@ def lowpass_filter(
         cutoff: cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
-        samp_freq: Sampling frequency,
+        fs: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
         zero_pole: If True, plot the zero-pole plot,
@@ -206,13 +206,13 @@ def lowpass_filter(
     '''
     btype = "lowpass"
     # Compute the Nyquist frequency
-    nyquist = 0.5 * samp_freq
+    nyquist = 0.5 * fs
     # Compute the normalized cutoff frequencies
     wn = cutoff / nyquist
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        fs=samp_freq, rp=rp, rs=rs, order=order,
+        fs=fs, rp=rp, rs=rs, order=order,
         freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
@@ -226,7 +226,7 @@ def bandpass_filter(
         high_cutoff: float = 40.0,
         rp: float = 5.0,
         rs: float = 40.0,
-        samp_freq: float = 100.0,
+        fs: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
         zero_pole: bool = False,
@@ -242,7 +242,7 @@ def bandpass_filter(
         high_cutoff: High cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
-        samp_freq: Sampling frequency,
+        fs: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
         zero_pole: If True, plot the zero-pole plot,
@@ -251,13 +251,13 @@ def bandpass_filter(
     '''
     btype = "bandpass"
     # Compute the Nyquist frequency
-    nyquist = 0.5 * samp_freq
+    nyquist = 0.5 * fs
     # Compute the normalized cutoff frequencies
     wn = [x / nyquist for x in [low_cutoff, high_cutoff]]
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        fs=samp_freq, rp=rp, rs=rs, order=order,
+        fs=fs, rp=rp, rs=rs, order=order,
         freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
@@ -271,7 +271,7 @@ def bandstop_filter(
         high_cutoff: float = 65.0,
         rp: float = 5.0,
         rs: float = 40.0,
-        samp_freq: float = 100.0,
+        fs: float = 100.0,
         order: int = 3,
         freq_response: bool = False,
         zero_pole: bool = False,
@@ -287,7 +287,7 @@ def bandstop_filter(
         high_cutoff: High cut-off frequency,
         rp: Maximum ripple allowed below unity gain in the passband,
         rs: Minimum attenuation required in the stop band,
-        samp_freq: Sampling frequency,
+        fs: Sampling frequency,
         order: Order of the filter,
         freq_response: If True, plot the frequency response,
         zero_pole: If True, plot the zero-pole plot,
@@ -296,13 +296,13 @@ def bandstop_filter(
     '''
     btype = "bandstop"
     # Compute the Nyquist frequency
-    nyquist = 0.5 * samp_freq
+    nyquist = 0.5 * fs
     # Compute the normalized cutoff frequencies
     wn = [x / nyquist for x in [low_cutoff, high_cutoff]]
     # Design filter. Obtain numerator and denominator
     (b, a) = frequency_filter_design(
         filt_design=filt_design, wn=wn, btype=btype,
-        fs=samp_freq, rp=rp, rs=rs, order=order,
+        fs=fs, rp=rp, rs=rs, order=order,
         freq_response=freq_response, zero_pole=zero_pole)
     # Apply the digital filter
     filtered_signal = filtfilt(b, a, np.ravel(sig))
@@ -311,7 +311,7 @@ def bandstop_filter(
 
 def notch_filter(
         sig: np.ndarray,
-        samp_freq: float,
+        fs: float,
         cutoff: float = 60.0,
         quality_factor: float = 30.0,
         freq_response: bool = False,
@@ -330,11 +330,11 @@ def notch_filter(
     Return:
         filtered_signal: Filtered signal,
     '''
-    b, a = iirnotch(cutoff, quality_factor, samp_freq)
+    b, a = iirnotch(cutoff, quality_factor, fs)
     filtered_signal = filtfilt(b, a, np.ravel(sig))
     if freq_response:
         # Plot frequency response
-        plot_frequency_response(b, a, samp_freq)
+        plot_frequency_response(b, a, fs)
     if zero_pole:
         # Plot Zero-Pole plot
         zero_pole_plot(b, a)
@@ -558,13 +558,13 @@ if __name__ == "__main__":
         file_name=parsed_arguments['filename']
     )
     stk_sigs = data_toolbox.segemntation_fix(
-        sig=sigs[:, 0], samp_freq=fs, win_length=10.0)
+        sig=sigs[:, 0], fs=fs, win_length=10.0)
 
     bandpass_filter(
         sig=sigs[:, 0], low_cutoff=10.0, high_cutoff=50.0,
-        filt_design='butter', samp_freq=fs, order=5,
+        filt_design='butter', fs=fs, order=5,
         freq_response=True, zero_pole=True)
 
     notch_filter(
-        sig=sigs[:, 0], cutoff=10.0, samp_freq=fs,
+        sig=sigs[:, 0], cutoff=10.0, fs=fs,
         freq_response=True, zero_pole=True)
