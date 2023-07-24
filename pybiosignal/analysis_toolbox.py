@@ -9,7 +9,7 @@ import data_toolbox
 import filtering
 import neurokit2 as nk
 import numpy as np
-from scipy import signal, stats
+from scipy import signal, stats, interpolate
 from scipy.fftpack import fft, ifft
 from scipy.ndimage.interpolation import shift
 
@@ -76,8 +76,25 @@ def template_matching(
     return (cross_corr, mean_abs_error, pearson_corr)
 
 
-def zero_crossing_rate(sig: np.ndarray, fs: float) -> int:
-    """Zero crossing rate
+def statistical_moments_extract(sig: np.ndarray) -> dict:
+    """Extract statistical moments
+
+    Inputs:
+        sig: Input signal
+    Returns:
+        moments: A dictionary of moments
+    """
+    sig = np.ravel(sig)
+    moments = {}
+    moments['1'] = np.mean(sig)
+    moments['2'] = np.var(sig)
+    moments['3'] = stats.skew(sig)
+    moments['4'] = stats.kurtosis(sig)
+    return moments
+
+
+def zero_crossing_rate_extract(sig: np.ndarray, fs: float) -> int:
+    """Zero crossing rate extraction
 
     Inputs:
         sig: Input signal
@@ -98,8 +115,10 @@ def zero_crossing_rate(sig: np.ndarray, fs: float) -> int:
     return zcr
 
 
-def turns_count(sig: np.ndarray, fs: float, height: float = None) -> int:
-    """Zero crossing rate
+def turns_count_extract(
+    sig: np.ndarray, fs: float, height: float = None
+) -> int:
+    """Turn counts extraction
 
     Inputs:
         sig: Input signal
@@ -108,6 +127,7 @@ def turns_count(sig: np.ndarray, fs: float, height: float = None) -> int:
     Returns:
         tc: Number of times the signal turns
     """
+    sig = np.ravel(sig)
     filtered = filtering.highpass_filter(
         sig=sig, fs=fs, order=5, cutoff=0.5)
     normalized = (filtered-np.min(filtered))/(np.max(
@@ -115,6 +135,36 @@ def turns_count(sig: np.ndarray, fs: float, height: float = None) -> int:
     exterma = signal.find_peaks(np.abs(normalized), height=height)[0]
     tc = exterma.size
     return tc
+
+
+def power_extract(sig: np.ndarray, fs: float) -> float:
+    """Extract power of the signal
+
+    Inputs:
+        sig: Input signal
+        fs: sampling frequency
+    Returns:
+        tc: Number of times the signal turns
+    """
+    sig = np.ravel(sig)
+    power = np.trapz(sig**2)/(sig.size/fs)
+    return power
+
+
+def rms_extract(
+    sig: np.ndarray,
+) -> float:
+    '''
+    Extract root mean square
+
+    Input:
+        sig: Input signal,
+    Return:
+        rms: Root mean square
+    '''
+    sig = np.ravel(sig)
+    rms = np.sqrt(np.mean(sig**2))
+    return rms
 
 
 def shannon_entropy_extract(
@@ -143,8 +193,8 @@ def entropy_extract(
     fs: float,
     bins: int = 50,
     base: int = 2
-) -> float:
-    """Extract Shannon entropy
+) -> dict:
+    """Extract multiple entropy values
 
     Inputs:
         sig: Input signal
@@ -153,7 +203,7 @@ def entropy_extract(
         base: Base of the log of the entropy
 
     Returns:
-        shannon_entropy: Shannon entropy
+        ent: Multiple entropy values
     """
     ent = {}
     ent['shannon_entropy'] = shannon_entropy_extract(sig, bins, base)
@@ -164,6 +214,49 @@ def entropy_extract(
     ent['multiscale_entropy'] = nk.entropy_multiscale(sig)
     ent = {key: round(ent[key], 2) for key in ent}
     return ent
+
+
+def envelope_extract(sig, order=1):
+    """Extract envelope of signal
+
+    Input:
+        sig: Input signal
+        order: Length of window, select more than 1 if the
+            size of the signal is big
+    Output :
+        max_enevelop: High envelope of input signal
+        min_enevelop: Low envelope of input signal
+    """
+    sig = np.ravel(sig)
+    max_local = (np.diff(np.sign(np.diff(sig))) < 0).nonzero()[0] + 1
+    min_local = (np.diff(np.sign(np.diff(sig))) > 0).nonzero()[0] + 1
+    # Find indices
+    max_enevelop_idx = max_local[[k+np.argmax(
+        sig[max_local[k:k+order]]) for k in range(len(max_local), order)]]
+    min_enevelop_idx = min_local[[i+np.argmin(
+        sig[min_local[i:i+order]]) for i in range(len(min_local), order)]]
+    # Interpolate
+    max_enevelop_idx = np.append(0, max_enevelop_idx)
+    max_enevelop_idx = np.append(max_enevelop_idx, sig.size)
+    min_enevelop_idx = np.append(0, min_enevelop_idx)
+    min_enevelop_idx = np.append(min_enevelop_idx, sig.size)
+    max_enevelop_func = interpolate.interp1d(
+        np.arange(sig.size)[max_enevelop_idx],
+        sig[max_enevelop_idx],
+        kind='cubic',
+        bounds_error=False,
+        fill_value=0.0
+    )
+    min_enevelop_func = interpolate.interp1d(
+        np.arange(sig.size)[min_enevelop_idx],
+        sig[min_enevelop_idx],
+        kind='cubic',
+        bounds_error=False,
+        fill_value=0.0
+    )
+    max_enevelop = max_enevelop_func(np.arange(sig.size))
+    min_enevelop = min_enevelop_func(np.arange(sig.size))
+    return (max_enevelop, min_enevelop)
 
 
 if __name__ == "__main__":
