@@ -6,6 +6,8 @@ Analysis toolbox
 from typing import Tuple
 
 import data_toolbox
+import filtering
+import neurokit2 as nk
 import numpy as np
 from scipy import signal, stats
 from scipy.fftpack import fft, ifft
@@ -16,7 +18,7 @@ def sync_signals(stacked_sigs: np.ndarray) -> np.ndarray:
     '''
     Synchronize input signals
 
-    Input:
+    Inputs:
         stacked_sigs: Input signal stacked
     Return:
         stacked_sigs_synced: synced signals stacked
@@ -52,7 +54,7 @@ def template_matching(
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Template matching
 
-    Input:
+    Inputs:
         stacked_sigs: Input signals (stacked)
 
     Returns:
@@ -72,6 +74,94 @@ def template_matching(
         stacked_sigs[k, :], template)[0] for k in range(
             stacked_sigs.shape[0])])
     return (cross_corr, mean_abs_error, pearson_corr)
+
+
+def zero_crossing_rate(sig: np.ndarray, fs: float) -> int:
+    """Zero crossing rate
+
+    Inputs:
+        sig: Input signal
+        fs: Sampling frequency
+
+    Returns:
+        zcr: Number of times the signal cross baseline (i.e., zero line)
+    """
+    sig = np.ravel(sig)
+    # Remove baseline wandering (if any)
+    filtered_signal = filtering.highpass_filter(
+        sig=sig, fs=fs, order=5, cutoff=0.5)
+    sign_changed = ((np.roll(
+        np.sign(filtered_signal), 1) - np.sign(
+            filtered_signal)) != 0).astype(int)
+    sign_changed[0] = 0
+    zcr = np.sum(sign_changed)
+    return zcr
+
+
+def turns_count(sig: np.ndarray, fs: float, height: float = None) -> int:
+    """Zero crossing rate
+
+    Inputs:
+        sig: Input signal
+        height: Count turns more/less than this value. If any, it
+            must be between 0 and 1
+    Returns:
+        tc: Number of times the signal turns
+    """
+    filtered = filtering.highpass_filter(
+        sig=sig, fs=fs, order=5, cutoff=0.5)
+    normalized = (filtered-np.min(filtered))/(np.max(
+        filtered)-np.min(filtered))
+    exterma = signal.find_peaks(np.abs(normalized), height=height)[0]
+    tc = exterma.size
+    return tc
+
+
+def shannon_entropy_extract(
+    sig: np.ndarray,
+    bins: int = 50,
+    base: int = 2
+) -> float:
+    """Extract Shannon entropy
+
+    Inputs:
+        sig: Input signal
+        bins: Number of histogram bins
+        base: Base of the log of the entropy
+
+    Returns:
+        shannon_entropy: Shannon entropy
+    """
+    #
+    hist = np.histogram(sig, bins)[0]
+    shannon_entropy = round(stats.entropy(hist/hist.sum(), base=base), 2)
+    return shannon_entropy
+
+
+def entropy_extract(
+    sig: np.ndarray,
+    bins: int = 50,
+    base: int = 2
+) -> float:
+    """Extract Shannon entropy
+
+    Inputs:
+        sig: Input signal
+        bins: Number of histogram bins
+        base: Base of the log of the entropy
+
+    Returns:
+        shannon_entropy: Shannon entropy
+    """
+    ent = {}
+    ent['shannon_entropy'] = shannon_entropy_extract(sig, bins, base)
+    _, pxx = signal.periodogram(sig, fs)
+    ent['spectral_entropy'] = stats.entropy(pxx/np.sum(pxx))
+    ent['approximate_entropy'] = nk.entropy_approximate(sig, corrected=True)
+    ent['sample_entropy'] = nk.entropy_sample(sig)
+    ent['multiscale_entropy'] = nk.entropy_multiscale(sig)
+    ent = {key: round(ent[key], 2) for key in ent}
+    return ent
 
 
 if __name__ == "__main__":
