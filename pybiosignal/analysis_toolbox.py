@@ -140,6 +140,7 @@ def shannon_entropy_extract(
 
 def entropy_extract(
     sig: np.ndarray,
+    fs: float,
     bins: int = 50,
     base: int = 2
 ) -> float:
@@ -147,6 +148,7 @@ def entropy_extract(
 
     Inputs:
         sig: Input signal
+        fs: Sampling frequency
         bins: Number of histogram bins
         base: Base of the log of the entropy
 
