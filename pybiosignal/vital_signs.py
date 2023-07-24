@@ -3,9 +3,9 @@
 Vital signs extraction for cardiovascular signals (ECG, PPG, etc.)
 """
 
+import analysis_toolbox
 import data_toolbox
 import ecg
-import neurokit2 as nk
 import numpy as np
 from scipy import integrate, interpolate, signal
 
@@ -114,8 +114,9 @@ def hrv_nonlinear_extract(peaks_idx: np.ndarray, fs: float) -> dict:
     hrv['sd2'] = np.sqrt(2*np.std(ibi)**2 - 1/2*(np.std(np.diff(ibi))**2))
     hrv['sd1_sd2'] = hrv['sd1']/hrv['sd2']
     hrv['s'] = np.pi*hrv['sd1']*hrv['sd2']
-    hrv['ApEn'] = nk.entropy_approximate(ibi, corrected=True)
-    hrv['SampEn'] = nk.entropy_sample(ibi)
+    # Entropy
+    ent = analysis_toolbox.entropy_extract(sig=ibi, fs=fs)
+    hrv = {**hrv, **ent}
     hrv = {key: round(hrv[key], 2) for key in hrv}
     return hrv
 
