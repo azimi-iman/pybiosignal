@@ -3,7 +3,7 @@
 Analysis toolbox
 """
 
-from typing import Tuple
+from typing import Tuple, List
 
 import data_toolbox
 import filtering
@@ -223,7 +223,7 @@ def envelope_extract(sig, order=1):
         sig: Input signal
         order: Length of window, select more than 1 if the
             size of the signal is big
-    Output :
+    Returns:
         max_enevelop: High envelope of input signal
         min_enevelop: Low envelope of input signal
     """
@@ -257,6 +257,49 @@ def envelope_extract(sig, order=1):
     max_enevelop = max_enevelop_func(np.arange(sig.size))
     min_enevelop = min_enevelop_func(np.arange(sig.size))
     return (max_enevelop, min_enevelop)
+
+
+def power_band_extract(
+        sig: np.ndarray, fs: float, freq_band: List[float, float],
+) -> float:
+    """Extract powerband
+
+    Input:
+        sig: Input signal
+        fs: Sampling frequency
+        freq_band: A list include two variables: i.e., the start
+            and end of the powerband
+    Returns:
+        power_band: High envelope of input signal
+    """
+    power_band = []
+    freq, pxx = signal.periodogram(sig, fs)
+    if fs/2 < freq_band[1]:
+        freq_band[1] = fs/2
+    if fs/2 < freq_band[0]:
+        freq_band[0] = fs/2
+    band_duration = freq_band[1] - freq_band[0]
+    power_band = np.trapz(pxx[abs(
+        freq - freq_band[0] - band_duration/2.0) <= band_duration/2.0])
+    return power_band
+
+
+def hjorth_parameters(sig: np.ndarray) -> Tuple[float, float, float]:
+    """Extract Hjorth parameters
+
+    Input:
+        sig: Input signal
+
+    Returns:
+        activity: Hjorth Activity
+        mobility: Hjorth Mobility
+        complexity: Hjorth Complexity
+    """
+    activity = np.var(sig)
+    mobility = np.sqrt(np.var(np.diff(sig))/np.var(sig))
+    complexity = np.sqrt(np.var(
+        np.diff(np.diff(sig)))/np.var(np.diff(sig)))/mobility
+    return (activity, mobility, complexity)
 
 
 if __name__ == "__main__":
