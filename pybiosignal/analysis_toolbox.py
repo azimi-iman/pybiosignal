@@ -260,7 +260,7 @@ def envelope_extract(sig, order=1):
 
 
 def power_band_extract(
-        sig: np.ndarray, fs: float, freq_band: List[float, float],
+        sig: np.ndarray, fs: float, freq_band: List[float],
 ) -> float:
     """Extract powerband
 
