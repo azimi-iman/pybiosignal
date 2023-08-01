@@ -21,5 +21,6 @@ dependencies = [
   "numpy~=1.19.5",
   "scipy~=1.5.4",
   "matplotlib~=3.3.4",
-  wfdb~=3.4.1,
+  "pandas~=1.1.5",
+  "wfdb~=3.4.1",
 ]
