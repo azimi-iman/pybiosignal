@@ -18,7 +18,8 @@ with open('pybiosignal/__init__.py', 'r') as f:
 with open('README.rst', 'r', encoding='utf-8') as f:
     readme = f.read()
 
-REQUIRES = ['biosppy', 'matplotlib', 'numpy', 'pandas', 'scipy', 'wfdb']
+REQUIRES = ['biosppy', 'matplotlib', 'neurokit2',
+            'numpy', 'pandas', 'scipy', 'wfdb']
 
 kwargs = {
     'name': 'PyBiosignal',

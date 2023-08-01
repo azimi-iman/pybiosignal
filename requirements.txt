@@ -1,6 +1,7 @@
 biosppy==0.6.1
 matplotlib==3.3.4
+neurokit2~=0.2.5
 numpy==1.19.5
 pandas==1.1.5
-scipy
+scipy~=1.5.4
 wfdb==3.4.1
