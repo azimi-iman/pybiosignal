@@ -30,7 +30,9 @@ def parse_arguments(path: str) -> dict:
     return arguments
 
 
-def read_ecg_mitdb(path: str, file_name: str) -> Tuple[np.ndarray, float]:
+def read_ecg_mitdb(
+        path: str, file_name: str, stream_dir: str = None
+) -> Tuple[np.ndarray, float]:
     '''
     Import ECG from MIT-DB
 
@@ -42,7 +44,8 @@ def read_ecg_mitdb(path: str, file_name: str) -> Tuple[np.ndarray, float]:
         fs: sampling frequency
     '''
     # Read the ECG record
-    record = wfdb.rdrecord(os.path.join(path, file_name))
+    record = wfdb.rdrecord(
+        os.path.join(path, file_name), pn_dir=stream_dir)
     # Get the ECG signal array and sampling frequency
     return (record.p_signal, record.fs)
 
