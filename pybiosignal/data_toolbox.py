@@ -39,6 +39,8 @@ def read_ecg_mitdb(
     Input:
         path: Path to file,
         filename: Name of file,
+        stream_dir: stream data from a
+            dataset of Physionet (e.g., 'mitdb')
     Return:
         sig: ecg signal
         fs: sampling frequency
