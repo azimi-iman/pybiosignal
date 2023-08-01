@@ -18,18 +18,18 @@ with open('pybiosignal/__init__.py', 'r') as f:
 with open('README.rst', 'r', encoding='utf-8') as f:
     readme = f.read()
 
-REQUIRES = []
+REQUIRES = ['biosppy', 'matplotlib', 'numpy', 'pandas', 'scipy', 'wfdb']
 
 kwargs = {
     'name': 'PyBiosignal',
     'version': version,
     'description': '',
     'long_description': readme,
-    'author': 'Iman',
-    'author_email': 'me@un.known',
-    'maintainer': 'Iman',
-    'maintainer_email': 'me@un.known',
-    'url': 'https://github.com/_/PyBiosignal',
+    'author': 'Iman Azimi',
+    'author_email': 'azimi.iman.1988@gmail.com',
+    'maintainer': 'Iman Azimi',
+    'maintainer_email': 'azimi.iman.1988@gmail.com',
+    'url': 'https://github.com/azimi-iman/PyBiosignal',
     'license': 'MIT/Apache-2.0',
     'classifiers': [
         'Development Status :: 4 - Beta',
